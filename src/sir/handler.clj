@@ -6,19 +6,19 @@
   (:require [compojure.handler :as handler]
             [ring.middleware.json :as middleware]
             [org.httpkit.client :as http]
+            [sir.goog :as goog]
             [compojure.route :as route]))
 
 (defn process
   [body]
   (if-let [{:keys [origin dest]} body]
-    (let [{:keys [status headers body error]} @(http/get "http://google.com")]
+    (let [{:keys [status headers body error]} @(http/get (goog/build-url body))]
       (if error
         error
         {:status 200
-         :body {:content body}}))
+         :body (goog/parse-results (parse-string body true))}))
     {:status 400
      :body "fail"}))
-
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
@@ -29,6 +29,16 @@
   (-> (handler/api app-routes)
       (middleware/wrap-json-body {:keywords? true})
       (middleware/wrap-json-response)))
+
+;; result object:
+;; originStationName
+;; originStationLatLon
+;; distanceToStation
+;; departureTime
+;; eolStationName
+;; agency
+;; lineName
+;; lineCode
 
 
 
