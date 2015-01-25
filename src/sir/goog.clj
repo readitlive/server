@@ -37,6 +37,9 @@
 (defn get-line-code [step]
   (get-in step [:transit_details :line :short_name]))
 
+(defn is-tram? [step]
+  (= (get-in step [:transit_details :line :vehicle :type]) "TRAM"))
+
 (defn get-origin-station-name [step]
   (get-in step [:transit_details :departure_stop :name]))
 
@@ -65,7 +68,8 @@
     :agency "caltrain"})
 
 (defn process-bart [step]
-  { :originStationName (bart/station-lookup (get-origin-station-name step))
+  { :originStationName (get-origin-station-name step)
+    :originStationShortname (bart/station-lookup (get-origin-station-name step))
     :originStationLatLon (get-origin-station-loc step)
     :departureTime (get-departure-time step)
     :destStationName (get-dest-station-name step)
@@ -73,13 +77,15 @@
     :agency "bart"})
 
 (defn process-muni [step]
-  { :originStationName (get-origin-station-name step)
-    :originStationLatLon (get-origin-station-loc step)
-    :departureTime (get-departure-time step)
-    :destStationName (get-dest-station-name step)
-    :lineName (get-line-name step)
-    :lineCode (get-line-code step)
-    :agency "muni"})
+  (if (is-tram? step)
+    { :originStationName (get-origin-station-name step)
+      :originStationLatLon (get-origin-station-loc step)
+      :departureTime (get-departure-time step)
+      :destStationName (get-dest-station-name step)
+      :lineName (get-line-name step)
+      :lineCode (get-line-code step)
+      :agency "muni"}
+    nil))
 
 (defn agency-name-from-step [step]
   (if-let [agency-name (:name (get (get-in step [:transit_details :line :agencies]) 0))]

@@ -23,8 +23,7 @@
   [{:keys [routes status]}]
   (let [trips (map goog/parse-route routes)]
     (println trips)
-    (map fetch-agency-data trips)
-    trips))
+    (map fetch-agency-data trips)))
 
 (defn process
   [body]
@@ -33,7 +32,7 @@
       (if error
         error
         {:status 200
-         :body (parse-results (parse-string body true))}))
+         :body (generate-string (parse-results (parse-string body true)))}))
     {:status 400
      :body "fail"}))
 
