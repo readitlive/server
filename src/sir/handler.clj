@@ -12,12 +12,14 @@
             [sir.muni :as muni]
             [compojure.route :as route]))
 
+
+; TODO
+; remove routes without times after they are back from the second api request
 (defn fetch-agency-data [trip]
   (cond
     (= (:agency trip) "bart") (bart/fetch trip)
     (= (:agency trip) "muni") (muni/fetch trip)
     :else trip))
-
 
 (defn parse-results
   [{:keys [routes status]}]

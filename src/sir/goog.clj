@@ -100,8 +100,10 @@
 (defn remove-nils [thing]
   (into {} (filter #(not= nil %) thing)))
 
+; TODO:
+; filter out duplicate routes, routes where the bus is too long, routes where supported transit type is after second,
+
 (defn filter-steps [route]
-  (println "filtering steps" route)
   ; (filter is-tram?
     (remove-nils route))
 
