@@ -33,7 +33,8 @@
       (if error
         error
         {:status 200
-         :body (generate-string (parse-results (parse-string body true)))}))
+          :headers {"Content-Type" "application/json"}
+          :body (generate-string (parse-results (parse-string body true)))}))
     {:status 400
      :body "fail"}))
 

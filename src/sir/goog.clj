@@ -37,8 +37,8 @@
 (defn get-line-code [step]
   (get-in step [:transit_details :line :short_name]))
 
-(defn is-tram? [step]
-  (= (get-in step [:transit_details :line :vehicle :type]) "TRAM"))
+(defn get-transit-type [step]
+  (get-in step [:transit_details :line :vehicle :type]))
 
 (defn get-origin-station-name [step]
   (get-in step [:transit_details :departure_stop :name]))
@@ -48,7 +48,6 @@
    :lon (:lng start)})
 
 (defn get-eol-station-name [step]
-  (println "step: ----------------" step)
   (let [strings ["Train towards", "Metro rail towards", "Bus towards"]]
     (str/trim
       (reduce
@@ -79,6 +78,7 @@
     :eolStationName (get-eol-station-name step)
     :lineName (get-line-name step)
     :lineCode (get-line-code step)
+    :transitType (get-transit-type step)
     :agency "muni"})
 
 (defn agency-name-from-step [step]
@@ -96,15 +96,17 @@
 (defn remove-nils [thing]
   (into {} (filter #(not= nil %) thing)))
 
+(defn not-bus? [step]
+  (not= (:transitType step) "BUS"))
+
 ; TODO:
-; filter out duplicate routes, routes where the bus is too long, routes where supported transit type is after second,
+; filter out routes where the bus is too long, routes where supported transit type is after second,
 
 (defn filter-steps [route]
-  ; (filter is-tram?
-    (remove-nils route))
+  (remove-nils route))
+    ; (filter not-bus? route)))
 
 (defn parse-route [route]
-  (remove-nils
-    (filter-steps
-      (map parse-step (:steps (get (:legs route) 0))))))
+  (filter-steps
+    (map parse-step (:steps (get (:legs route) 0)))))
 
