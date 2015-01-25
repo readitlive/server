@@ -77,15 +77,13 @@
     :agency "bart"})
 
 (defn process-muni [step]
-  (if (is-tram? step)
-    { :originStationName (get-origin-station-name step)
-      :originStationLatLon (get-origin-station-loc step)
-      :departureTime (get-departure-time step)
-      :destStationName (get-dest-station-name step)
-      :lineName (get-line-name step)
-      :lineCode (get-line-code step)
-      :agency "muni"}
-    nil))
+  { :originStationName (get-origin-station-name step)
+    :originStationLatLon (get-origin-station-loc step)
+    :departureTime (get-departure-time step)
+    :destStationName (get-dest-station-name step)
+    :lineName (get-line-name step)
+    :lineCode (get-line-code step)
+    :agency "muni"})
 
 (defn agency-name-from-step [step]
   (if-let [agency-name (:name (get (get-in step [:transit_details :line :agencies]) 0))]
@@ -99,7 +97,17 @@
       (= name "Bay Area Rapid Transit") (process-bart step)
       (= name "Caltrain") (process-caltrain step))))
 
+(defn remove-nils [thing]
+  (println "removing nils")
+  (into {} (filter #(not= nil %) thing)))
+
+(defn filter-steps [route]
+  (println "filtering steps" route)
+  ; (filter is-tram?
+    (remove-nils route))
 
 (defn parse-route [route]
-  (into {} (filter #(not= nil %) (map parse-step (:steps (get (:legs route) 0))))))
+  (remove-nils
+    (filter-steps
+      (map parse-step (:steps (get (:legs route) 0))))))
 

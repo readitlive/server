@@ -12,4 +12,5 @@
 
 
 (defn fetch [trip]
-  (println (build-url trip)))
+  (println (build-url trip))
+  trip)

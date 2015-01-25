@@ -13,6 +13,7 @@
             [compojure.route :as route]))
 
 (defn fetch-agency-data [trip]
+  (println trip)
   (cond
     (= (:agency trip) "bart") (bart/fetch trip)
     (= (:agency trip) "muni") (muni/fetch trip)
@@ -22,7 +23,7 @@
 (defn parse-results
   [{:keys [routes status]}]
   (let [trips (map goog/parse-route routes)]
-    (println trips)
+    (println trips "----------------------- trips back from google")
     (map fetch-agency-data trips)))
 
 (defn process
