@@ -8,7 +8,23 @@
             [org.httpkit.client :as http]
             [clojure.string :as str]
             [sir.goog :as goog]
+            [sir.bart :as bart]
+            [sir.muni :as muni]
             [compojure.route :as route]))
+
+(defn fetch-agency-data [trip]
+  (cond
+    (= (:agency trip) "bart") (bart/fetch trip)
+    (= (:agency trip) "muni") (muni/fetch trip)
+    :else trip))
+
+
+(defn parse-results
+  [{:keys [routes status]}]
+  (let [trips (map goog/parse-route routes)]
+    (println trips)
+    (map fetch-agency-data trips)
+    trips))
 
 (defn process
   [body]
@@ -17,7 +33,7 @@
       (if error
         error
         {:status 200
-         :body (goog/parse-results (parse-string body true))}))
+         :body (parse-results (parse-string body true))}))
     {:status 400
      :body "fail"}))
 
