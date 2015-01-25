@@ -1,5 +1,7 @@
 (ns sir.goog
-  (:require [clojure.string :as str]))
+  (:require
+    [sir.bart :as bart]
+    [clojure.string :as str]))
 
 
 
@@ -32,6 +34,9 @@
 (defn get-line-name [step]
   (get-in step [:transit_details :line :name]))
 
+(defn get-line-code [step]
+  (get-in step [:transit_details :line :short_name]))
+
 (defn get-origin-station-name [step]
   (get-in step [:transit_details :departure_stop :name]))
 
@@ -60,7 +65,7 @@
     :agency "caltrain"})
 
 (defn process-bart [step]
-  { :originStationName (get-origin-station-name step)
+  { :originStationName (bart/station-lookup (get-origin-station-name step))
     :originStationLatLon (get-origin-station-loc step)
     :departureTime (get-departure-time step)
     :destStationName (get-dest-station-name step)
@@ -68,7 +73,13 @@
     :agency "bart"})
 
 (defn process-muni [step]
-  {:name "muni"})
+  { :originStationName (get-origin-station-name step)
+    :originStationLatLon (get-origin-station-loc step)
+    :departureTime (get-departure-time step)
+    :destStationName (get-dest-station-name step)
+    :lineName (get-line-name step)
+    :lineCode (get-line-code step)
+    :agency "muni"})
 
 (defn agency-name-from-step [step]
   (if-let [agency-name (:name (get (get-in step [:transit_details :line :agencies]) 0))]
@@ -84,7 +95,7 @@
 
 
 (defn parse-route [route]
-  (map parse-step (:steps (get (:legs route) 0))))
+  (into {} (filter #(not= nil %) (map parse-step (:steps (get (:legs route) 0))))))
 
 (defn parse-results
   [{:keys [routes status]}]
