@@ -1,9 +1,5 @@
-(ns sir.bart
+(ns sir.muni
   (:require [clojure.string :as str]))
-
-(defn station-lookup [station]
-  "TODO"
-  station)
 
 (defn fetch [trip]
   trip)

@@ -1,6 +1,7 @@
 (ns sir.goog
   (:require
     [sir.bart :as bart]
+    [sir.muni :as muni]
     [clojure.string :as str]))
 
 
@@ -27,6 +28,12 @@
 ;; lineName
 ;; lineCode
 ;; agency
+
+(defn fetch-data [trip]
+  (cond
+    (= (:agency trip) "bart") (bart/fetch trip)
+    (= (:agency trip) "muni") (muni/fetch trip)
+    :else trip))
 
 (defn get-departure-time [step]
   (get-in step [:transit_details :departure_time :value]))
@@ -99,7 +106,8 @@
 
 (defn parse-results
   [{:keys [routes status]}]
-  (let [res (map parse-route routes)]
-    (println res)
-    res))
+  (let [trips (map parse-route routes)]
+    (println trips)
+    (map fetch-data trips)
+    trips))
 
