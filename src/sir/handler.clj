@@ -6,6 +6,7 @@
   (:require [compojure.handler :as handler]
             [ring.middleware.json :as middleware]
             [org.httpkit.client :as http]
+            [clojure.string :as str]
             [sir.goog :as goog]
             [compojure.route :as route]))
 
@@ -33,7 +34,6 @@
 ;; result object:
 ;; originStationName
 ;; originStationLatLon
-;; distanceToStation
 ;; departureTime
 ;; eolStationName
 ;; agency
