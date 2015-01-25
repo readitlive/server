@@ -22,7 +22,7 @@
 ;; originStationName
 ;; originStationLatLon {:lat :lon}
 ;; departureTime
-;; destStationName
+;; eolStationName
 ;; agency
 ;; lineName
 ;; lineCode
@@ -47,8 +47,9 @@
   {:lat (:lat start)
    :lon (:lng start)})
 
-(defn get-dest-station-name [step]
-  (let [strings ["Train towards", "Metro rail towards"]]
+(defn get-eol-station-name [step]
+  (println "step: ----------------" step)
+  (let [strings ["Train towards", "Metro rail towards", "Bus towards"]]
     (str/trim
       (reduce
         (fn [result replacer]
@@ -56,14 +57,11 @@
         (:html_instructions step)
         strings))))
 
-(defn get-dest-station-name-bart [step]
-  (str/trim (str/replace (:html_instructions step) #"Train towards" "")))
-
 (defn process-caltrain [step]
   { :originStationName (get-origin-station-name step)
     :originStationLatLon (get-origin-station-loc step)
     :departureTime (get-departure-time step)
-    :destStationName (get-dest-station-name step)
+    :eolStationName (get-eol-station-name step)
     :lineName (get-line-name step)
     :agency "caltrain"})
 
@@ -71,16 +69,14 @@
   { :originStationName (get-origin-station-name step)
     :originStationShortname (bart/station-lookup (get-origin-station-name step))
     :originStationLatLon (get-origin-station-loc step)
-    :departureTime (get-departure-time step)
-    :destStationName (get-dest-station-name step)
+    :eolStationName (get-eol-station-name step)
     :lineName (get-line-name step)
     :agency "bart"})
 
 (defn process-muni [step]
   { :originStationName (get-origin-station-name step)
     :originStationLatLon (get-origin-station-loc step)
-    :departureTime (get-departure-time step)
-    :destStationName (get-dest-station-name step)
+    :eolStationName (get-eol-station-name step)
     :lineName (get-line-name step)
     :lineCode (get-line-code step)
     :agency "muni"})

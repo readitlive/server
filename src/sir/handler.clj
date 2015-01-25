@@ -24,7 +24,7 @@
 (defn parse-results
   [{:keys [routes status]}]
   (let [trips (map goog/parse-route routes)]
-    (map fetch-agency-data trips)))
+    (into #{} (map fetch-agency-data trips))))
 
 (defn process
   [body]
@@ -46,16 +46,3 @@
   (-> (handler/api app-routes)
       (middleware/wrap-json-body {:keywords? true})
       (middleware/wrap-json-response)))
-
-;; result object:
-;; originStationName
-;; originStationLatLon
-;; departureTime
-;; eolStationName
-;; agency
-;; lineName
-;; lineCode
-
-
-
-
