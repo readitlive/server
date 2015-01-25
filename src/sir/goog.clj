@@ -98,7 +98,6 @@
       (= name "Caltrain") (process-caltrain step))))
 
 (defn remove-nils [thing]
-  (println "removing nils")
   (into {} (filter #(not= nil %) thing)))
 
 (defn filter-steps [route]
