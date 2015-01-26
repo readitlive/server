@@ -21,10 +21,31 @@
     (= (:agency trip) "muni") (muni/fetch trip)
     :else trip))
 
+(defn same-trip? [tripA tripB]
+  (if (= (:eolStationName tripA) (:eolStationName tripB))
+    (= (:originStationName tripA) (:originStationName tripB))
+    nil))
+
+(defn trip-in-set? [trip trips]
+  (some #(same-trip? % trip) trips))
+
+(defn make-uniq [results]
+  (reduce
+    (fn [collector trip]
+      (if (trip-in-set? trip collector)
+        collector
+        (conj collector trip)))
+    []
+    results))
+
 (defn parse-results
   [{:keys [routes status]}]
   (let [trips (map goog/parse-route routes)]
-    (into #{} (map fetch-agency-data trips))))
+    ; (println "before map")
+    ; (println (count (apply concat (map fetch-agency-data trips))))
+    ; (println "after map")
+    ; (println (count (into #{} (apply concat (map fetch-agency-data trips)))))
+    (apply concat (map fetch-agency-data (make-uniq trips)))))
 
 (defn process
   [body]

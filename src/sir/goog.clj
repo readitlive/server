@@ -106,6 +106,7 @@
     ; (filter not-bus? route)))
 
 (defn parse-route [route]
-  (filter-steps
-    (map parse-step (:steps (get (:legs route) 0)))))
+  ; (println (map parse-step (:steps (get (:legs route) 0))))
+  (let [stepss (filter-steps (map parse-step (:steps (get (:legs route) 0))))]
+    stepss))
 
