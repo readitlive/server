@@ -1,21 +1,51 @@
 (ns sir.bart
   (:use cheshire.core)
   (:require [org.httpkit.client :as http]
+            [clojure.xml :as xml]
             [clojure.string :as str]))
+
+(defn parse [s]
+  (xml/parse
+    (java.io.ByteArrayInputStream. (.getBytes s))))
+
+(defn gen-trips [times trip]
+  (map
+    #(into trip {:departureTime %})
+    times))
+
+(defn get-minutes-from-etd [etd]
+  (map
+    #(get-in % [:content 0 :content 0])
+    (filter
+      #(= (:tag %) :estimate)
+      (:content etd))))
+
+(defn get-etd-for-eol [body station-code]
+  (nth (filter
+    (fn [etd]
+      (= (str/lower-case (get-in etd [:content 1 :content 0])) station-code))
+    (->>
+      body
+      xml-seq
+      (filter #(= (:tag %) :etd)))) 0))
+
+(defn get-departure-times [body station-code]
+  (get-minutes-from-etd (get-etd-for-eol body station-code)))
+
+(defn process-data [trip body]
+  (gen-trips (get-departure-times body (:eolStationCode trip)) trip))
 
 (defn build-url
   [trip]
   (str "http://api.bart.gov/api/etd.aspx?cmd=etd&orig="
-       (:originStationShortname trip)
+       (:originStationCode trip)
        "&key=ZELI-U2UY-IBKQ-DT35"))
 
-
 (defn fetch [trip]
-  trip)
-  ; (let [{body :body} @(http/get (build-url trip))]
-  ;   (println body)))
-
-
+  (let [{body :body error :error} @(http/get (build-url trip))]
+    (if error
+      (println error "<--------------- error fetching bart")
+      (process-data trip (parse body)))))
 
 (def station-data {
   :12th-St-Oakland-City-Center "12th"

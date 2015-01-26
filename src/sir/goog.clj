@@ -64,9 +64,10 @@
 
 (defn process-bart [step]
   { :originStationName (get-origin-station-name step)
-    :originStationShortname (bart/station-lookup (get-origin-station-name step))
+    :originStationCode (bart/station-lookup (get-origin-station-name step))
     :originStationLatLon (get-origin-station-loc step)
     :eolStationName (get-eol-station-name step)
+    :eolStationCode (bart/station-lookup (get-eol-station-name step))
     :lineName (get-line-name step)
     :agency "bart"})
 
