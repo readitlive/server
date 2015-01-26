@@ -93,21 +93,42 @@
       (= name "Caltrain") (process-caltrain step))))
 
 (defn remove-nils [thing]
-  (into {} (filter #(not= nil %) thing)))
+  (into [] (filter #(not= nil %) thing)))
 
 (defn not-bus? [step]
   (not= (:transitType step) "BUS"))
 
 ; TODO:
-; filter out routes where the bus is too long, routes where supported transit type is after second,
+; filter out routes where the bus is too long, routes where supported transit type is after second
+; If there are any caltrain, remove all but caltrain unless the distance to the start is short enough
+(defn caltrainify [route]
+  (let [caltrains (reduce
+                    (fn [collector step]
+                      (if (= (:agency step) "caltrain")
+                        (conj collector step)
+                        collector))
+                    []
+                    route)]
+    (if (< 0 (count caltrains))
+      caltrains
+      route)))
+
+(defn remove-buses [route]
+  (reduce
+    (fn [collector step]
+      (if (not= (:transitType step) "BUS")
+        (conj collector step)
+        collector))
+    []
+    route))
 
 (defn filter-steps [route]
-  (remove-nils route))
+  (caltrainify
+    (remove-buses route)))
+    ; (remove-nils route)))
     ; (filter not-bus? route)))
 
 (defn parse-route [route]
-  ; (println (map parse-step (:steps (get (:legs route) 0))))
-  ; (let [stepss (filter-steps (map parse-step (:steps (get (:legs route) 0))))]
   (let [trips (reduce
                 (fn [collector step]
                   (let [trip (parse-step step)]
@@ -116,6 +137,5 @@
                       collector)))
                 []
                 (:steps (get (:legs route) 0)))]
-    ; (println trips)
-    trips))
+    (filter-steps trips)))
 
