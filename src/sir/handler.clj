@@ -16,10 +16,13 @@
 ; TODO
 ; remove routes without times after they are back from the second api request
 (defn fetch-agency-data [trip]
-  (cond
-    (= (:agency trip) "bart") (bart/fetch trip)
-    (= (:agency trip) "muni") (muni/fetch trip)
-    :else trip))
+  (let [trip-or-trips (cond
+                        (= (:agency trip) "bart") (bart/fetch trip)
+                        (= (:agency trip) "muni") (muni/fetch trip)
+                        :else trip)]
+    (if (vector? trip-or-trips)
+      trip-or-trips
+      (conj [] trip-or-trips))))
 
 (defn same-trip? [tripA tripB]
   (if (= (:eolStationName tripA) (:eolStationName tripB))
@@ -40,22 +43,17 @@
 
 (defn parse-results
   [{:keys [routes status]}]
-  (let [trips (reduce
-                (fn [collector route]
-                  (conj collector (goog/parse-route route)))
-                []
-                routes)]
-    (println "uniq trips before fetching ````````````````````````")
-    (println trips)
-    (println "uniq trips before fetching ^^^^^^^^^^^^^^^^^^^^^^")
+  (let [trips
+          (make-uniq
+            (apply concat
+              (map #(goog/parse-route %) routes)))]
     (let [timed-trips
             (reduce
-              (fn [collector trips]
-                (into collector trips))
+              (fn [collector trip]
+                (let [timed-trips (fetch-agency-data trip)]
+                  (into collector timed-trips)))
               []
-              (fetch-agency-data trips))]
-            (println "timed-trips")
-            (println timed-trips)
+              trips)]
             timed-trips)))
 
 (defn process

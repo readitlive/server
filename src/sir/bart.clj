@@ -45,7 +45,7 @@
   (let [{body :body error :error} @(http/get (build-url trip))]
     (if error
       (println error "<--------------- error fetching bart")
-      (process-data trip (parse body)))))
+      (into [] (process-data trip (parse body))))))
 
 (def station-data {
   :12th-St-Oakland-City-Center "12th"
