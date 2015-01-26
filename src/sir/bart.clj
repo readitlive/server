@@ -10,7 +10,11 @@
 
 (defn gen-trips [times trip]
   (map
-    #(into trip {:departureTime (+ (System/currentTimeMillis) (* (read-string %) 1000 60))})
+    (fn [minutes]
+      ; minutes is either a number or "Leaving"
+      (if (number? (read-string minutes))
+        (into trip {:departureTime (+ (System/currentTimeMillis) (* (read-string minutes) 1000 60))})
+        (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
     times))
 
 (defn get-minutes-from-etd [etd]
