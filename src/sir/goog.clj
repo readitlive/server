@@ -3,8 +3,6 @@
     [sir.bart :as bart]
     [clojure.string :as str]))
 
-
-
 (defn build-url
   [{origin :origin dest :dest}]
   (str "https://maps.googleapis.com/maps/api/directions/json?origin="
