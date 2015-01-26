@@ -107,6 +107,15 @@
 
 (defn parse-route [route]
   ; (println (map parse-step (:steps (get (:legs route) 0))))
-  (let [stepss (filter-steps (map parse-step (:steps (get (:legs route) 0))))]
-    stepss))
+  ; (let [stepss (filter-steps (map parse-step (:steps (get (:legs route) 0))))]
+  (let [trips (reduce
+                (fn [collector step]
+                  (let [trip (parse-step step)]
+                    (if trip
+                      (conj collector trip)
+                      collector)))
+                []
+                (:steps (get (:legs route) 0)))]
+    ; (println trips)
+    trips))
 

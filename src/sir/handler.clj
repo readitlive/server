@@ -40,12 +40,23 @@
 
 (defn parse-results
   [{:keys [routes status]}]
-  (let [trips (map goog/parse-route routes)]
-    ; (println "before map")
-    ; (println (count (apply concat (map fetch-agency-data trips))))
-    ; (println "after map")
-    ; (println (count (into #{} (apply concat (map fetch-agency-data trips)))))
-    (apply concat (map fetch-agency-data (make-uniq trips)))))
+  (let [trips (reduce
+                (fn [collector route]
+                  (conj collector (goog/parse-route route)))
+                []
+                routes)]
+    (println "uniq trips before fetching ````````````````````````")
+    (println trips)
+    (println "uniq trips before fetching ^^^^^^^^^^^^^^^^^^^^^^")
+    (let [timed-trips
+            (reduce
+              (fn [collector trips]
+                (into collector trips))
+              []
+              (fetch-agency-data trips))]
+            (println "timed-trips")
+            (println timed-trips)
+            timed-trips)))
 
 (defn process
   [body]
