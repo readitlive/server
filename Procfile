@@ -1,1 +1,1 @@
-web: java $JVM_OPTS -jar target/should-i-run.jar
+web: lein with-profile production trampoline run -m sir.handler
