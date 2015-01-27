@@ -57,26 +57,38 @@
               trips)]
             timed-trips)))
 
-(defn process
-  [body]
-  (if-let [{:keys [origin dest]} body]
-    (let [{:keys [status headers body error]} @(http/get (goog/build-url body))]
-      (if error
-        error
-        {:status 200
-          :headers {"Content-Type" "application/json"}
-          :body (generate-string (parse-results (parse-string body true)))}))
-    {:status 400
-     :body "fail"}))
+; TODO: handle body, not just params
+
+(defn fetch-trips
+  [body params]
+  (println "params url")
+  (println params)
+  (println (goog/build-url-params params))
+  (let [{:keys [status headers body error]} @(http/get (goog/build-url-params params))]
+    (if error
+      error
+      {:status 200
+        :headers {"Content-Type" "application/json"}
+        :body (generate-string (parse-results (parse-string body true)))})))
+  ; (if-let [{:keys [origin dest]} body]
+  ;   (let [{:keys [status headers body error]} @(http/get (goog/build-url body))]
+  ;     (if error
+  ;       error
+  ;       {:status 200
+  ;         :headers {"Content-Type" "application/json"}
+  ;         :body (generate-string (parse-results (parse-string body true)))}))
+  ;   {:status 400
+  ;    :body "fail"}))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (POST "/" {body :body} (process body))
+  (POST "/" {body :body params :params} (fetch-trips body params))
+  ; (POST "/" {body :body params :params} (fetch-trips body params))
   (route/not-found "Not Found"))
 
 (def app
   (-> (handler/api app-routes)
-      (middleware/wrap-json-body {:keywords? true})
+      ; (middleware/wrap-json-body {:keywords? true})
       (middleware/wrap-json-response)))
 
 (defn -main []
