@@ -11,6 +11,7 @@
                  [cheshire "4.0.3"]]
   :plugins [[lein-ring "0.8.13"]]
   :ring {:handler sir.handler/app}
+  :uberjar-name "should-i-run.jar"
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring-mock "0.1.5"]]}})
