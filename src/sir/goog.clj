@@ -92,12 +92,6 @@
       (= name "Bay Area Rapid Transit") (process-bart step)
       (= name "Caltrain") (process-caltrain step))))
 
-(defn remove-nils [thing]
-  (into [] (filter #(not= nil %) thing)))
-
-(defn not-bus? [step]
-  (not= (:transitType step) "BUS"))
-
 ; TODO:
 ; filter out routes where the bus is too long, routes where supported transit type is after second
 ; If there are any caltrain, remove all but caltrain unless the distance to the start is short enough
