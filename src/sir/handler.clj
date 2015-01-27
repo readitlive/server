@@ -6,6 +6,7 @@
   (:require [compojure.handler :as handler]
             [ring.middleware.json :as middleware]
             [org.httpkit.client :as http]
+            [ring.adapter.jetty :as jetty]
             [clojure.string :as str]
             [sir.goog :as goog]
             [sir.bart :as bart]
@@ -77,4 +78,7 @@
   (-> (handler/api app-routes)
       (middleware/wrap-json-body {:keywords? true})
       (middleware/wrap-json-response)))
+
+(defn -main []
+    (jetty/run-jetty app {:port 3000}))
 
