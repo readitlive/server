@@ -58,24 +58,37 @@
               trips)]
       all-timed-trips)))
 
+(defn contains-keys? [coll & keys]
+  (every? true? (map #(contains? coll %) keys)))
+
+(defn valid-request?
+  [body params]
+  (if (contains-keys? params :startLat :startLon :destLat :destLon)
+    true
+    (if (and (map? body) (contains-keys? body :origin :dest))
+      true
+      false)))
+
 (defn fetch-trips
   [body params]
-  (let [url
-        (if (contains? params :startLat)
-          (goog/build-url-params params)
-          (goog/build-url body))]
-    (let [{:keys [status headers body error]} @(http/get url)]
-      (if error
-        {:status 400
-         :body "fail"}
-        {:status 200
-          :headers {"Content-Type" "application/json"}
-          :body (generate-string (parse-results (parse-string body true)))}))))
+  (if (valid-request? body params)
+    (let [url
+          (if (contains? params :startLat)
+            (goog/build-url-params params)
+            (goog/build-url body))]
+      (let [{:keys [status headers body error]} @(http/get url)]
+        (if error
+          {:status 418
+           :body "fail"}
+          {:status 200
+            :headers {"Content-Type" "application/json"}
+            :body (generate-string (parse-results (parse-string body true)))})))
+    {:status 400
+     :body "bad request"}))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
   (POST "/" {body :body params :params} (fetch-trips body params))
-  ; (POST "/" {body :body params :params} (fetch-trips body params))
   (route/not-found "Not Found"))
 
 (def app
