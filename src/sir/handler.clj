@@ -48,14 +48,14 @@
           (make-uniq
             (apply concat
               (map #(goog/parse-route %) routes)))]
-    (let [timed-trips
+    (let [all-timed-trips
             (reduce
               (fn [collector trip]
                 (let [timed-trips (fetch-agency-data trip)]
                   (into collector timed-trips)))
               []
               trips)]
-      timed-trips)))
+      all-timed-trips)))
 
 (defn fetch-trips
   [body params]
