@@ -132,8 +132,8 @@
     route))
 
 (defn filter-steps [route]
-  (caltrainify
-    (remove-buses route)))
+  (caltrainify route))
+    ;(remove-buses route)))
 
 (defn parse-route [route]
   (let [trips (reduce
