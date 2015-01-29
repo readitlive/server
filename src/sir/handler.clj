@@ -11,6 +11,7 @@
             [sir.goog :as goog]
             [sir.bart :as bart]
             [sir.muni :as muni]
+            [environ.core :refer [env]]
             [compojure.route :as route]))
 
 
@@ -83,4 +84,5 @@
       (middleware/wrap-json-response)))
 
 (defn -main []
-    (jetty/run-jetty app {:port 3000}))
+  (let [port (or (env :port) 3000)])
+    (jetty/run-jetty app port))
