@@ -108,6 +108,7 @@
 
 ; TODO:
 ; filter out routes where the bus is too long, routes where supported transit type is after second
+; Also only take the first supported transit type, after caltrainify
 ; If there are any caltrain, remove all but caltrain unless the distance to the start is short enough
 (defn caltrainify [route]
   (let [caltrains (reduce
@@ -133,8 +134,6 @@
 (defn filter-steps [route]
   (caltrainify
     (remove-buses route)))
-    ; (remove-nils route)))
-    ; (filter not-bus? route)))
 
 (defn parse-route [route]
   (let [trips (reduce

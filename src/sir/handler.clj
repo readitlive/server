@@ -55,30 +55,21 @@
                   (into collector timed-trips)))
               []
               trips)]
-            timed-trips)))
-
-; TODO: handle body, not just params
+      timed-trips)))
 
 (defn fetch-trips
   [body params]
-  (println "params url")
-  (println params)
-  (println (goog/build-url-params params))
-  (let [{:keys [status headers body error]} @(http/get (goog/build-url-params params))]
-    (if error
-      error
-      {:status 200
-        :headers {"Content-Type" "application/json"}
-        :body (generate-string (parse-results (parse-string body true)))})))
-  ; (if-let [{:keys [origin dest]} body]
-  ;   (let [{:keys [status headers body error]} @(http/get (goog/build-url body))]
-  ;     (if error
-  ;       error
-  ;       {:status 200
-  ;         :headers {"Content-Type" "application/json"}
-  ;         :body (generate-string (parse-results (parse-string body true)))}))
-  ;   {:status 400
-  ;    :body "fail"}))
+  (let [url
+        (if (contains? params :startLat)
+          (goog/build-url-params params)
+          (goog/build-url body))]
+    (let [{:keys [status headers body error]} @(http/get url)]
+      (if error
+        {:status 400
+         :body "fail"}
+        {:status 200
+          :headers {"Content-Type" "application/json"}
+          :body (generate-string (parse-results (parse-string body true)))}))))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
@@ -88,9 +79,8 @@
 
 (def app
   (-> (handler/api app-routes)
-      ; (middleware/wrap-json-body {:keywords? true})
+      (middleware/wrap-json-body {:keywords? true})
       (middleware/wrap-json-response)))
 
 (defn -main []
     (jetty/run-jetty app {:port 3000}))
-
