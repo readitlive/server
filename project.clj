@@ -9,6 +9,7 @@
                  [c3p0/c3p0 "0.9.1.2"]
                  [http-kit "2.1.16"]
                  [javax.servlet/servlet-api "2.5"]
+                 [environ "1.0.0"]
                  [cheshire "4.0.3"]]
   :plugins [[lein-ring "0.8.13"]]
   :ring {:handler sir.handler/app
