@@ -84,5 +84,5 @@
       (middleware/wrap-json-response)))
 
 (defn -main []
-  (let [port (or (env :port) 3000)])
-    (jetty/run-jetty app port))
+  (let [port (or (env :port) 3000)]
+    (jetty/run-jetty app port)))
