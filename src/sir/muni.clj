@@ -55,23 +55,37 @@
 ;(defn process-data [trip body]
 ;  (gen-trips (get-departure-times body (:eolStationCode trip)) trip))
 
+(defn get-times-from-direction [direction]
+  direction)
+
 (defn get-departures-for-direction [departures trip]
-  departures)
+  (println "-------------------all departures --------------")
+  (println departures)
+  (let [direction
+    (reduce
+      (fn [coll item]
+        (println "-------------------departure [:content]--------------")
+        (println (get-in item [:content ]))
+        (println "----------------trip===============================")
+        (println trip)
+        (if (= trip (get-in item [:attrs :Code]))
+          (conj coll item)
+          coll))
+      []
+      departures)]
+  (get-times-from-direction direction)))
 
 (defn get-route-for-line [routes {lineCode :lineCode}]
-  (reduce
-    (fn [coll item]
-      (println "--------------")
-      (println (get-in item [:attrs]))
-      (println "item" item)
-      (if (= lineCode (get-in item [:attrs :Code]))
-        item
-        nil))
-    {}
+  (filter
+    (fn [item]
+      (= lineCode (get-in item [:attrs :Code])))
     routes))
 
 (defn get-routes [routes]
-  (get-in routes [:content 0 :content 0 :content 0 :content 0]))
+  (let [route-or-routes (get-in routes [:content 0 :content 0 :content 0 :content 0])]
+    (if (vector? route-or-routes)
+      route-or-routes
+      (conj [] route-or-routes))))
 
 (defn get-departure-times [body trip]
   (get-departures-for-direction (get-route-for-line (get-routes body) trip) trip))
@@ -86,6 +100,8 @@
        (str/replace (url-safe (:originStationName trip)) "%26" "and")))
 
 (defn fetch [trip]
+  (println "--------------------")
+  (println (build-url trip))
   (let [{body :body error :error} @(http/get (build-url trip))]
     (if error
       (println error "<--------------- error fetching muni")

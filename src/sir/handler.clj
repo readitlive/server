@@ -63,11 +63,9 @@
 
 (defn valid-request?
   [body params]
-  (if (contains-keys? params :startLat :startLon :destLat :destLon)
-    true
-    (if (and (map? body) (contains-keys? body :origin :dest))
-      true
-      false)))
+  (or
+    (contains-keys? params :startLat :startLon :destLat :destLon)
+    (and (map? body) (contains-keys? body :origin :dest))))
 
 (defn fetch-trips
   [body params]
