@@ -47,16 +47,16 @@
     (reduce
       (fn [coll item]
         (println "vvvvvvvvvvvvvvvvvvvvvvvv")
-        (direction-from-trip trip (get-in item [:content 1 :content 0 :attrs :Name]))
-        (direction-from-trip trip (get-in item [:content 0 :content 0 :attrs :Name]))
+        (direction-from-trip trip (get-in item [:content 0 :attrs :Name]))
+        (direction-from-trip trip (get-in item [:content 0 :attrs :Name]))
         (println "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-        (if (= (direction-from-trip trip (get-in item [:content 0 :content 0 :attrs :Name])) (get-in item [:content 0 :content 0 :attrs :Code]))
-          (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content 0 :content]))
-          (if (= (direction-from-trip trip (get-in item [:content 1 :content 0 :attrs :Name])) (get-in item [:content 1 :content 0 :attrs :Code]))
-            (conj coll (get-in item [:content 1 :content 0 :content 0 :content 0 :content 0 :content]))
+        (if (= (direction-from-trip trip (get-in item [:content 0 :attrs :Name])) (get-in item [:content 0 :attrs :Code]))
+          (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content]))
+          (if (= (direction-from-trip trip (get-in item [:content 0 :attrs :Name])) (get-in item [:content 0 :attrs :Code]))
+            (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content]))
             coll)))
       []
-      departures)]
+      (get-in departures [0 :content]))]
   (get-times-from-departure departure)))
 
 (defn get-route-for-line [routes {line-code :lineCode}]
