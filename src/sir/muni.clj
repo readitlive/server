@@ -32,10 +32,10 @@
         (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
     times))
 
-(defn direction-from-trip [{eolStationName :eolStationName} muni-name]
-  (println "tripNAme: " eolStationName)
-  (println "muni-name: " muni-name)
-  "Outbound")
+(defn directions-match? [{eolStationName :eolStationName} muni-name]
+  (if (.contains muni-name eolStationName)
+    true
+    (and (.contains muni-name "Downtown") (.contains eolStationName "Downtown"))))
 
 (defn get-times-from-departure [direction]
   (map
@@ -46,15 +46,9 @@
   (let [departure
     (reduce
       (fn [coll item]
-        (println "vvvvvvvvvvvvvvvvvvvvvvvv")
-        (direction-from-trip trip (get-in item [:content 0 :attrs :Name]))
-        (direction-from-trip trip (get-in item [:content 0 :attrs :Name]))
-        (println "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-        (if (= (direction-from-trip trip (get-in item [:content 0 :attrs :Name])) (get-in item [:content 0 :attrs :Code]))
+        (if (directions-match? trip (get-in item [:content 0 :attrs :Name]))
           (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content]))
-          (if (= (direction-from-trip trip (get-in item [:content 0 :attrs :Name])) (get-in item [:content 0 :attrs :Code]))
-            (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content]))
-            coll)))
+          coll))
       []
       (get-in departures [0 :content]))]
   (get-times-from-departure departure)))
