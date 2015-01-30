@@ -24,14 +24,14 @@
 ; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Downtown", withString: " Inbound")
 
 
-;(defn gen-trips [times trip]
-;  (map
-;    (fn [minutes]
-;      ; minutes is either a number or "Leaving"
-;      (if (number? (read-string minutes))
-;        (into trip {:departureTime (+ (System/currentTimeMillis) (* (read-string minutes) 1000 60))})
-;        (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
-;    times))
+(defn gen-trips [times trip]
+  (map
+    (fn [minutes]
+      ; minutes is either a number or "Leaving"
+      (if (number? (read-string minutes))
+        (into trip {:departureTime (+ (System/currentTimeMillis) (* (read-string minutes) 1000 60))})
+        (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
+    times))
 ;
 ;(defn get-minutes-from-etd [etd]
 ;  (map
@@ -55,31 +55,32 @@
 ;(defn process-data [trip body]
 ;  (gen-trips (get-departure-times body (:eolStationCode trip)) trip))
 
-(defn get-times-from-direction [direction]
-  direction)
+(defn direction-from-trip [{eolStationName :eolStationName}]
+  "Outbound")
+
+(defn get-times-from-departure [direction]
+  (map
+    #(get-in % [:content 0])
+    (get direction 0))) ; no idea why this works or is needed
 
 (defn get-departures-for-direction [departures trip]
-  (println "-------------------all departures --------------")
-  (println departures)
-  (let [direction
+  (let [departure
     (reduce
       (fn [coll item]
-        (println "-------------------departure [:content]--------------")
-        (println (get-in item [:content ]))
-        (println "----------------trip===============================")
-        (println trip)
-        (if (= trip (get-in item [:attrs :Code]))
-          (conj coll item)
-          coll))
+        (if (= (direction-from-trip trip) (get-in item [:content 0 :content 0 :attrs :Code]))
+          (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content 0 :content]))
+          (if (= (direction-from-trip trip) (get-in item [:content 1 :content 0 :attrs :Code]))
+            (conj coll (get-in item [:content 1 :content 0 :content 0 :content 0 :content 0 :content]))
+            coll)))
       []
       departures)]
-  (get-times-from-direction direction)))
+  (get-times-from-departure departure)))
 
 (defn get-route-for-line [routes {lineCode :lineCode}]
-  (filter
+  (into [] (filter
     (fn [item]
       (= lineCode (get-in item [:attrs :Code])))
-    routes))
+    routes)))
 
 (defn get-routes [routes]
   (let [route-or-routes (get-in routes [:content 0 :content 0 :content 0 :content 0])]
@@ -91,8 +92,7 @@
   (get-departures-for-direction (get-route-for-line (get-routes body) trip) trip))
 
 (defn process-data [trip body]
-  (println (get-departure-times body trip))
-  trip)
+  (gen-trips (get-departure-times body trip) trip))
 
 (defn build-url
   [trip]
