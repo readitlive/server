@@ -14,14 +14,14 @@
 ;(defn normalize-station-name [name]
 ;  )
 
-; TODO: do replacements:
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("Metro ", withString: "")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Outbd", withString: " Outbound")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Outbound", withString: " Outbound")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Inbd", withString: " Inbound")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Inbound", withString: " Inbound")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Downtn", withString: " Inbound")
-; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Downtown", withString: " Inbound")
+(defn station-url [name]
+  (let [strings [["Metro" ""] ["/Outbd" " Outbound"] ["/Outbound" " Outbound"] ["/Inbd" " Inbound"] ["/Inbound" " Inbound"] ["/Downtn" " Inbound"] ["/Downtown" " Inbound"]]]
+    (str/trim
+      (reduce
+        (fn [result [replacee replaceor]]
+          (str/replace result replacee replaceor))
+        name
+        strings))))
 
 (defn gen-trips [times trip]
   (map
@@ -32,7 +32,9 @@
         (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
     times))
 
-(defn direction-from-trip [{eolStationName :eolStationName}]
+(defn direction-from-trip [{eolStationName :eolStationName} muni-name]
+  (println "tripNAme: " eolStationName)
+  (println "muni-name: " muni-name)
   "Outbound")
 
 (defn get-times-from-departure [direction]
@@ -44,23 +46,27 @@
   (let [departure
     (reduce
       (fn [coll item]
-        (if (= (direction-from-trip trip) (get-in item [:content 0 :content 0 :attrs :Code]))
+        (println "vvvvvvvvvvvvvvvvvvvvvvvv")
+        (direction-from-trip trip (get-in item [:content 1 :content 0 :attrs :Name]))
+        (direction-from-trip trip (get-in item [:content 0 :content 0 :attrs :Name]))
+        (println "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        (if (= (direction-from-trip trip (get-in item [:content 0 :content 0 :attrs :Name])) (get-in item [:content 0 :content 0 :attrs :Code]))
           (conj coll (get-in item [:content 0 :content 0 :content 0 :content 0 :content 0 :content]))
-          (if (= (direction-from-trip trip) (get-in item [:content 1 :content 0 :attrs :Code]))
+          (if (= (direction-from-trip trip (get-in item [:content 1 :content 0 :attrs :Name])) (get-in item [:content 1 :content 0 :attrs :Code]))
             (conj coll (get-in item [:content 1 :content 0 :content 0 :content 0 :content 0 :content]))
             coll)))
       []
       departures)]
   (get-times-from-departure departure)))
 
-(defn get-route-for-line [routes {lineCode :lineCode}]
+(defn get-route-for-line [routes {line-code :lineCode}]
   (into [] (filter
     (fn [item]
-      (= lineCode (get-in item [:attrs :Code])))
+      (= line-code (get-in item [:attrs :Code])))
     routes)))
 
 (defn get-routes [routes]
-  (let [route-or-routes (get-in routes [:content 0 :content 0 :content 0 :content 0])]
+  (let [route-or-routes (get-in routes [:content 0 :content 0 :content 0 :content])]
     (if (vector? route-or-routes)
       route-or-routes
       (conj [] route-or-routes))))
@@ -74,7 +80,7 @@
 (defn build-url
   [trip]
   (str "http://services.my511.org/Transit2.0/GetNextDeparturesByStopName.aspx?token=83d1f7f4-1d1e-4fc0-a070-162a95bd106f&agencyName=SF-MUNI&stopName="
-       (str/replace (url-safe (:originStationName trip)) "%26" "and")))
+       (str/replace (url-safe (station-url (:originStationName trip))) "%26" "and")))
 
 (defn fetch [trip]
   (println "--------------------")
@@ -83,3 +89,4 @@
     (if error
       (println error "<--------------- error fetching muni")
       (into [] (process-data trip (parse body))))))
+
