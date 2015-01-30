@@ -23,7 +23,6 @@
 ; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Downtn", withString: " Inbound")
 ; muniOriginStationName = muniOriginStationName.stringByReplacingOccurrencesOfString("/Downtown", withString: " Inbound")
 
-
 (defn gen-trips [times trip]
   (map
     (fn [minutes]
@@ -32,28 +31,6 @@
         (into trip {:departureTime (+ (System/currentTimeMillis) (* (read-string minutes) 1000 60))})
         (into trip {:departureTime (+ (System/currentTimeMillis) (* 1000 60))})))
     times))
-;
-;(defn get-minutes-from-etd [etd]
-;  (map
-;    #(get-in % [:content 0 :content 0])
-;    (filter
-;      #(= (:tag %) :estimate)
-;      (:content etd))))
-;
-;(defn get-etd-for-eol [body station-code]
-;  (nth (filter
-;         (fn [etd]
-;           (= (str/lower-case (get-in etd [:content 1 :content 0])) station-code))
-;         (->>
-;           body
-;           xml-seq
-;           (filter #(= (:tag %) :etd)))) 0))
-;
-;(defn get-departure-times [body station-code]
-;  (get-minutes-from-etd (get-etd-for-eol body station-code)))
-;
-;(defn process-data [trip body]
-;  (gen-trips (get-departure-times body (:eolStationCode trip)) trip))
 
 (defn direction-from-trip [{eolStationName :eolStationName}]
   "Outbound")
@@ -105,4 +82,4 @@
   (let [{body :body error :error} @(http/get (build-url trip))]
     (if error
       (println error "<--------------- error fetching muni")
-      (process-data trip (parse body)))))
+      (into [] (process-data trip (parse body))))))
