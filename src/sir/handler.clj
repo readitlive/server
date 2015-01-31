@@ -15,10 +15,11 @@
             [environ.core :refer [env]]
             [compojure.route :as route]))
 
-(def C (cache/ttl-cache-factory {} :ttl (* 1000 1 1)))
+(def C (cache/ttl-cache-factory {} :ttl (* 1000 60 3)))
 
 ; TODO round lat and lon, combine
 (defn cache-name [body]
+  (println (str/replace (str (get-in body [:origin])) "." "_"))
   (get-in body [:origin :lat]))
 
 ; TODO
@@ -87,7 +88,10 @@
         (let [data (if (cache/has? C (cache-name req-data))
                      (cache/hit C (cache-name req-data))
                      (let [fresh-data @(http/get url)]
+                       (println C)
+                       (println (cache-name url))
                        (assoc C (cache-name url) fresh-data)
+                       (println C)
                        fresh-data))]
           (let [{:keys [status headers body error]} data]
             (if error

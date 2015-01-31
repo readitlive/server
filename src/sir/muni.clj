@@ -2,7 +2,23 @@
   (:import (java.net URLEncoder))
   (:require [org.httpkit.client :as http]
             [clojure.xml :as xml]
+            [clojure.core.cache :as cache]
             [clojure.string :as str]))
+
+(def muni-cache (cache/ttl-cache-factory {} :ttl (* 1000 60 3)))
+
+(let [hi "hi"]
+  (-> muni-cache
+    (assoc "Powell20Station20Outbound" {:data 2})
+    (assoc hi {:data 6})
+    (cache/lookup hi)))
+
+; TODO round lat and lon, combine
+(defn cache-item-name [url]
+  (-> url
+      (str/replace "http://services.my511.org/Transit2.0/GetNextDeparturesByStopName.aspx?token=83d1f7f4-1d1e-4fc0-a070-162a95bd106f&agencyName=SF-MUNI&stopName="
+                   "")
+      (str/replace "%" "")))
 
 (defn url-safe [url]
   (some-> url str (URLEncoder/encode "UTF-8") (.replace "+" "%20")))
@@ -10,9 +26,6 @@
 (defn parse [s]
   (xml/parse
     (java.io.ByteArrayInputStream. (.getBytes s))))
-
-;(defn normalize-station-name [name]
-;  )
 
 (defn station-url [name]
   (let [strings [["Metro" ""] ["/Outbd" " Outbound"] ["/Outbound" " Outbound"] ["/Inbd" " Inbound"] ["/Inbound" " Inbound"] ["/Downtn" " Inbound"] ["/Downtown" " Inbound"]]]
@@ -79,8 +92,18 @@
 (defn fetch [trip]
   (println "--------------------")
   (println (build-url trip))
-  (let [{body :body error :error} @(http/get (build-url trip))]
-    (if error
-      (println error "<--------------- error fetching muni")
-      (into [] (process-data trip (parse body))))))
+  (let [url (build-url trip)]
+    (let [data (if (cache/has? muni-cache (cache-item-name url))
+                 (do
+                   (println "muni cache hit!")
+                   (cache/lookup muni-cache (cache-item-name url)))
+                 (let [fresh-data @(http/get (build-url trip))]
+                   (println "muni cache missssssss! "(cache-item-name url))
+                   (assoc muni-cache (cache-item-name url) fresh-data)
+                   (println (cache/lookup muni-cache (cache-item-name url)))
+                   fresh-data))]
+      (let [{body :body error :error} data]
+        (if error
+          (println error "<--------------- error fetching muni")
+          (into [] (process-data trip (parse body))))))))
 
