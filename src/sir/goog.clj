@@ -28,7 +28,7 @@
 ;; agency
 
 (defn get-departure-time [step]
-  (get-in step [:transit_details :departure_time :value]))
+  (* (get-in step [:transit_details :departure_time :value]) 1000))
 
 (defn get-line-name [step]
   (get-in step [:transit_details :line :name]))
