@@ -15,12 +15,14 @@
             [environ.core :refer [env]]
             [compojure.route :as route]))
 
-(def C (cache/ttl-cache-factory {} :ttl (* 1000 60 3)))
+(def goog-cache (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 3))))
 
 ; TODO round lat and lon, combine
-(defn cache-name [body]
-  (println (str/replace (str (get-in body [:origin])) "." "_"))
-  (get-in body [:origin :lat]))
+(defn cache-name [{:keys [:origin :dest]}]
+  (-> (str (:lat origin) (:lng origin) (:lat dest) (:lng dest))
+      (str/replace "." "_")))
+
+;(cache-name {:origin {:lat 123.4212 :lng 23425.1231} :dest {:lat 923.9879 :lng -93425.1236}})
 
 ; TODO
 ; remove routes without times after they are back from the second api request
@@ -85,13 +87,10 @@
   (if (valid-request? body params)
     (let [req-data (normalize-request body params)]
       (let [url (goog/build-url req-data)]
-        (let [data (if (cache/has? C (cache-name req-data))
-                     (cache/hit C (cache-name req-data))
+        (let [data (if (cache/has? @goog-cache (cache-name req-data))
+                     (cache/lookup @goog-cache (cache-name req-data))
                      (let [fresh-data @(http/get url)]
-                       (println C)
-                       (println (cache-name url))
-                       (assoc C (cache-name url) fresh-data)
-                       (println C)
+                       (swap! goog-cache assoc (cache-name req-data) fresh-data)
                        fresh-data))]
           (let [{:keys [status headers body error]} data]
             (if error

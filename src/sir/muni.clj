@@ -5,13 +5,13 @@
             [clojure.core.cache :as cache]
             [clojure.string :as str]))
 
-(def muni-cache (cache/ttl-cache-factory {} :ttl (* 1000 60 3)))
+(def muni-cache (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 3))))
 
-(let [hi "hi"]
-  (-> muni-cache
-    (assoc "Powell20Station20Outbound" {:data 2})
-    (assoc hi {:data 6})
-    (cache/lookup hi)))
+;(let [hi "hi"]
+;  (-> muni-cache
+;    (assoc "Powell20Station20Outbound" {:data 2})
+;    (assoc hi {:data 6})
+;    (cache/lookup hi)))
 
 ; TODO round lat and lon, combine
 (defn cache-item-name [url]
@@ -90,17 +90,12 @@
        (str/replace (url-safe (station-url (:originStationName trip))) "%26" "and")))
 
 (defn fetch [trip]
-  (println "--------------------")
   (println (build-url trip))
   (let [url (build-url trip)]
-    (let [data (if (cache/has? muni-cache (cache-item-name url))
-                 (do
-                   (println "muni cache hit!")
-                   (cache/lookup muni-cache (cache-item-name url)))
+    (let [data (if (cache/has? @muni-cache (cache-item-name url))
+                 (cache/lookup @muni-cache (cache-item-name url))
                  (let [fresh-data @(http/get (build-url trip))]
-                   (println "muni cache missssssss! "(cache-item-name url))
-                   (assoc muni-cache (cache-item-name url) fresh-data)
-                   (println (cache/lookup muni-cache (cache-item-name url)))
+                   (swap! muni-cache assoc (cache-item-name url) fresh-data)
                    fresh-data))]
       (let [{body :body error :error} data]
         (if error

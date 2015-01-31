@@ -93,21 +93,7 @@
       (= name "Bay Area Rapid Transit") (process-bart step)
       (= name "Caltrain") (process-caltrain step))))
 
-; TODO:
-; filter out routes where the bus is too long, routes where supported transit type is after second
-; Also only take the first supported transit type, after caltrainify
-; If there are any caltrain, remove all but caltrain unless the distance to the start is short enough
-(defn caltrainify [route]
-  (let [caltrains (reduce
-                    (fn [collector step]
-                      (if (= (:agency step) "caltrain")
-                        (conj collector step)
-                        collector))
-                    []
-                    route)]
-    (if (< 0 (count caltrains))
-      caltrains
-      route)))
+
 
 (defn remove-buses [route]
   (reduce
@@ -118,8 +104,33 @@
     []
     route))
 
+(defn all-bart? [route]
+  (every? #(= (:agency %) "bart") route))
+
+(defn any-caltrain? [route]
+  (some #(= (:agency %) "caltrain") route))
+
+(defn caltrainify [route]
+  (filter #(= (:agency %) "caltrain") route))
+
+; TODO:
+; if all are bart, return only first (into [] (first routes))
+;
+; filter out routes where the bus is too long, routes where supported transit type is after second
+; Also only take the first supported transit type, after caltrainify
 (defn filter-steps [route]
-  (caltrainify route))
+  (if (= (count route) 1)
+    route
+    (if (any-caltrain? route)
+      (caltrainify route)
+      (if (all-bart? route)
+        (do
+          (println "all bart" )
+          (into [] (first route)))
+        (do
+          (println "-----------------")
+          (println route)
+          route)))))
     ;(remove-buses route)))
 
 (defn parse-route [route]
