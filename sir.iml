@@ -21,6 +21,7 @@
     <orderEntry type="library" name="Leiningen: http-kit:2.1.16" level="project" />
     <orderEntry type="library" name="Leiningen: javax.servlet/servlet-api:2.5" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/clojure:1.6.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/core.cache:0.6.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.nrepl:0.2.3" level="project" />
     <orderEntry type="library" name="Leiningen: ring-mock:0.1.5" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-jetty-adapter:1.3.2" level="project" />
@@ -33,6 +34,7 @@
     <orderEntry type="library" name="Leiningen: ring/ring-codec:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: instaparse:1.3.4" level="project" />
     <orderEntry type="library" name="Leiningen: commons-codec:1.6" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/data.priority-map:0.0.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.eclipse.jetty/jetty-server:7.6.13.v20130916" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-core:1.3.2" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-servlet:1.3.2" level="project" />

@@ -17,19 +17,6 @@
        (quot (System/currentTimeMillis) 1000)
        "&mode=transit&alternatives=true"))
 
-(defn build-url-params
-  [{:keys [:startLat :startLon :destLat :destLon]}]
-  (str "https://maps.googleapis.com/maps/api/directions/json?origin="
-       startLat
-       ","
-       startLon
-       "&destination="
-       destLat
-       ","
-       destLon
-       "&key=AIzaSyB9JV82Cy-GFPTAbYy3HgfZOGT75KVp-dg&departure_time="
-       (quot (System/currentTimeMillis) 1000)
-       "&mode=transit&alternatives=true"))
 ;; Result object:
 ;; originStationName
 ;; originStationLatLon {:lat :lon}

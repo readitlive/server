@@ -99,7 +99,11 @@
   :West-Oakland "woak" })
 
 (defn normalize-name [string]
-  (str/replace (str/replace (str/replace (str/replace string " " "-") "St." "St") "/" "-") "'" ""))
+  (-> string
+      (str/replace " " "-")
+      (str/replace "St." "St")
+      (str/replace  "/" "-")
+      (str/replace  "'" "")))
 
 (defn station-lookup [station-name]
   (get station-data (keyword (normalize-name station-name))))

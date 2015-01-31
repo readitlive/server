@@ -8,12 +8,18 @@
             [org.httpkit.client :as http]
             [ring.adapter.jetty :as jetty]
             [clojure.string :as str]
+            [clojure.core.cache :as cache]
             [sir.goog :as goog]
             [sir.bart :as bart]
             [sir.muni :as muni]
             [environ.core :refer [env]]
             [compojure.route :as route]))
 
+(def C (cache/ttl-cache-factory {} :ttl (* 1000 1 1)))
+
+; TODO round lat and lon, combine
+(defn cache-name [body]
+  (get-in body [:origin :lat]))
 
 ; TODO
 ; remove routes without times after they are back from the second api request
@@ -67,20 +73,29 @@
     (contains-keys? params :startLat :startLon :destLat :destLon)
     (and (map? body) (contains-keys? body :origin :dest))))
 
+(defn normalize-request [body params]
+  (if (contains? params :startLat)
+    {:origin {:lat (:startLat params) :lng (:startLon params)}
+    :dest {:lat (:destLat params) :lng (:destLon params)}}
+    body))
+
 (defn fetch-trips
   [body params]
   (if (valid-request? body params)
-    (let [url
-          (if (contains? params :startLat)
-            (goog/build-url-params params)
-            (goog/build-url body))]
-      (let [{:keys [status headers body error]} @(http/get url)]
-        (if error
-          {:status 418
-           :body "fail"}
-          {:status 200
-            :headers {"Content-Type" "application/json"}
-            :body (generate-string (parse-results (parse-string body true)))})))
+    (let [req-data (normalize-request body params)]
+      (let [url (goog/build-url req-data)]
+        (let [data (if (cache/has? C (cache-name req-data))
+                     (cache/hit C (cache-name req-data))
+                     (let [fresh-data @(http/get url)]
+                       (assoc C (cache-name url) fresh-data)
+                       fresh-data))]
+          (let [{:keys [status headers body error]} data]
+            (if error
+              {:status 418
+               :body "fail"}
+              {:status 200
+               :headers {"Content-Type" "application/json"}
+               :body (generate-string (parse-results (parse-string body true)))})))))
     {:status 400
      :body "bad request"}))
 
@@ -97,3 +112,6 @@
 (defn -main []
   (let [port (Integer. (or (env :port) 3000))]
     (jetty/run-jetty app {:port port})))
+
+
+
