@@ -22,8 +22,6 @@
   (-> (str (:lat origin) (:lng origin) (:lat dest) (:lng dest))
       (str/replace "." "_")))
 
-;(cache-name {:origin {:lat 123.4212 :lng 23425.1231} :dest {:lat 923.9879 :lng -93425.1236}})
-
 ; TODO
 ; remove routes without times after they are back from the second api request
 (defn fetch-agency-data [trip]

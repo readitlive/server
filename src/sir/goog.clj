@@ -114,24 +114,15 @@
   (filter #(= (:agency %) "caltrain") route))
 
 ; TODO:
-; if all are bart, return only first (into [] (first routes))
-;
 ; filter out routes where the bus is too long, routes where supported transit type is after second
 ; Also only take the first supported transit type, after caltrainify
 (defn filter-steps [route]
-  (if (= (count route) 1)
-    route
-    (if (any-caltrain? route)
-      (caltrainify route)
-      (if (all-bart? route)
-        (do
-          (println "all bart" )
-          (into [] (first route)))
-        (do
-          (println "-----------------")
-          (println route)
-          route)))))
-    ;(remove-buses route)))
+  (println route)
+  (cond
+    (= (count route) 1) route
+    (any-caltrain? route) (caltrainify route)
+    (all-bart? route) (conj [] (first route))
+    :else route))
 
 (defn parse-route [route]
   (let [trips (reduce
@@ -142,5 +133,5 @@
                       collector)))
                 []
                 (:steps (get (:legs route) 0)))]
-    (filter-steps trips)))
+    (filter-steps (filter identity trips))))
 
