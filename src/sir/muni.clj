@@ -7,13 +7,6 @@
 
 (def muni-cache (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 3))))
 
-;(let [hi "hi"]
-;  (-> muni-cache
-;    (assoc "Powell20Station20Outbound" {:data 2})
-;    (assoc hi {:data 6})
-;    (cache/lookup hi)))
-
-; TODO round lat and lon, combine
 (defn cache-item-name [url]
   (-> url
       (str/replace "http://services.my511.org/Transit2.0/GetNextDeparturesByStopName.aspx?token=83d1f7f4-1d1e-4fc0-a070-162a95bd106f&agencyName=SF-MUNI&stopName="

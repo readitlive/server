@@ -2,11 +2,22 @@
   (:use cheshire.core)
   (:require [org.httpkit.client :as http]
             [clojure.xml :as xml]
+            [clojure.core.cache :as cache]
             [clojure.string :as str]))
 
 (defn parse [s]
   (xml/parse
     (java.io.ByteArrayInputStream. (.getBytes s))))
+
+(def bart-cache (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 3))))
+
+(defn cache-item-name [url]
+  (-> url
+      (str/replace "http://services.my511.org/Transit2.0/GetNextDeparturesByStopName.aspx?token=83d1f7f4-1d1e-4fc0-a070-162a95bd106f&agencyName=SF-MUNI&stopName="
+                   "")
+      (str/replace "%" "")))
+
+
 
 (defn gen-trips [times trip]
   (map
@@ -46,10 +57,16 @@
        "&key=ZELI-U2UY-IBKQ-DT35"))
 
 (defn fetch [trip]
-  (let [{body :body error :error} @(http/get (build-url trip))]
-    (if error
-      (println error "<--------------- error fetching bart")
-      (into [] (process-data trip (parse body))))))
+  (let [url (build-url trip)
+        data (if (cache/has? @bart-cache (cache-item-name url))
+               (cache/lookup @bart-cache (cache-item-name url))
+               (let [fresh-data @(http/get url)]
+                 (swap! bart-cache assoc (cache-item-name url) fresh-data)
+                 fresh-data))]
+    (let [{body :body error :error} data]
+      (if error
+        (println error "<--------------- error fetching bart")
+        (into [] (process-data trip (parse body)))))))
 
 (def station-data {
   :12th-St-Oakland-City-Center "12th"
