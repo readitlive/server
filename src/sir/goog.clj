@@ -117,7 +117,6 @@
 ; filter out routes where the bus is too long, routes where supported transit type is after second
 ; Also only take the first supported transit type, after caltrainify
 (defn filter-steps [route]
-  (println route)
   (cond
     (= (count route) 1) route
     (any-caltrain? route) (caltrainify route)
