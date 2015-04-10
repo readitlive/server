@@ -1,48 +1,57 @@
 (ns ril.handler
-  (:import com.mchange.v2.c3p0.ComboPooledDataSource)
-  (:use compojure.core
+  ; (:import com.mchange.v2.c3p0.ComboPooledDataSource)
+  (:use [compojure.core :only [defroutes GET POST PUT DELETE context]]
         cheshire.core
         ring.util.response
-        org.httpkit.server)
+        ring.middleware.cors)
   (:require [compojure.handler :as handler]
             [ring.middleware.json :as middleware]
-            [ring.middleware.cors :refer [wrap-cors]]
+            [ring.middleware.reload :as reload]
             [ring.adapter.jetty :as jetty]
             [clojure.string :as str]
             [clojure.core :refer :all]
             [environ.core :refer [env]]
+            [org.httpkit.server :as ws]
             [compojure.route :as route]))
 
 (def clients (atom {}))
 
 (defn posts
   [req]
-  (with-channel req con
-    (swap! clients assoc con true)
-    (println con " connected")
-    (on-close con (fn [status]
-                   (swap! clients dissoc con)
-                   (println con " disconnected. Status: " status)))))
+  (println "posts handler")
+  (ws/with-channel req channel
+   (swap! clients assoc channel true)
+   (println channel " connected")
+   (ws/on-close channel (fn [status]
+                      (swap! clients dissoc channel)
+                      (println channel " disconnected. Status: " status)))
+    (if (:websocket? channel)
+      (println "WebSocket channel")
+      (println "HTTP channel"))
+   (ws/on-receive channel (fn [data]
+                         (ws/send! channel "hi!")))))
 
-(future (loop []
-         (doseq [client @clients]
-          (send! (key client) (generate-string
-                               {:happiness (rand 10)})
-                 false))
-         (Thread/sleep 5000)
-         (recur)))
+; (future (loop []
+;          (doseq [client @clients]
+;           (ws/send! (key client) (generate-string
+;                                {:happiness (rand 10)})
+;                  false))
+;          (Thread/sleep 5000)
+;          (recur)))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (GET "/" [] posts)
+  (GET "/ws" req (posts req))) ; websocket
   ; (POST "/" {body :body params :params} (fetch-trips body params))
-  (route/not-found "Not Found"))
+  ; (route/files "/static/")  ; in public folder?
+  ; (route/not-found "Not Found"))
 
 (def app
-  (-> (handler/api app-routes)
-      (middleware/wrap-json-body {:keywords? true})
-      (wrap-cors :access-control-allow-origin #".+")
-      (middleware/wrap-json-response)))
+  (-> (handler/site app-routes)
+      reload/wrap-reload
+      (wrap-cors :access-control-allow-origin #".+")))
+      ; (middleware/wrap-json-body {:keywords? true})
+      ; (middleware/wrap-json-response)))
 
 (defn -main []
   (let [port (Integer. (or (env :port) 3000))]
